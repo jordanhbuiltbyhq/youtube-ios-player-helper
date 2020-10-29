@@ -851,7 +851,11 @@ NSString static *const kYTPlayerSyndicationRegexPattern = @"^https://tpc.googles
 }
 
 - (UIWebView *)createNewWebView {
-    UIWebView *webView = [[UIWebView alloc] initWithFrame:self.bounds];
+    //NOTE: Modified to prevent issue where rotating device would change quality
+    //https://stackoverflow.com/a/45388013/1795356
+    
+    //UIWebView *webView = [[UIWebView alloc] initWithFrame:self.bounds];
+    UIWebView *webView = [[UIWebView alloc] initWithFrame:CGRectMake(0, 0, 1280, 720)];
     webView.autoresizingMask = (UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight);
     webView.scrollView.scrollEnabled = NO;
     webView.scrollView.bounces = NO;
@@ -862,6 +866,22 @@ NSString static *const kYTPlayerSyndicationRegexPattern = @"^https://tpc.googles
             webView.opaque = NO;
         }
     }
+    
+    //NOTE: Added
+    webView.scalesPageToFit = YES;
+    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
+        CGSize contentSize = webView.scrollView.contentSize;
+        CGSize viewSize = self.bounds.size;
+        float scale = viewSize.width / contentSize.width;
+        webView.scrollView.minimumZoomScale = scale;
+        webView.scrollView.maximumZoomScale = scale;
+        webView.scrollView.zoomScale = scale;
+        // center webView after scaling..
+        [webView setFrame:CGRectMake(0.0, self.frame.origin.y/3, 4096.0, 2160.0)];
+    } else {
+        webView.frame = self.bounds;
+    }
+    [webView reload];
     
     return webView;
 }
